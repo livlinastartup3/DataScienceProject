@@ -6,24 +6,25 @@ import numpy as np
 
 
 def clean_and_combine(directory: str, bundle_path: str, item_overview_path: str) -> pd.DataFrame:
-    # """
-    # This function reads three datasets, merges them, and performs cleaning.
 
-    # Parameters:
-    # - directory (str): Path to the directory containing Orderlines dataset.
-    # - bundle_path (str): Path to the Bundle dataset in xlsx format.
-    # - item_overview_path (str): Path to the Item Overview dataset in xlsx format.
+    """
+    This function reads three datasets, merges them, and performs cleaning.
 
-    # Returns:
-    # - DataFrame: Combined and cleaned dataset.
+    Parameters:
+    - directory (str): Path to the directory containing Orderlines dataset.
+    - bundle_path (str): Path to the Bundle dataset in xlsx format.
+    - item_overview_path (str): Path to the Item Overview dataset in xlsx format.
 
-    # Example:
-    # - directory = r'C:\Users\frifi\OneDrive\Desktop\School Mat UHasselt\Third Semester\Project Data Science\Data sets\01 Sales Forecasts'
-    # - bundle = r'C:\Users\frifi\OneDrive\Desktop\School Mat UHasselt\Third Semester\Project Data Science\Data sets\Bundle TE\Bundle item TE.xlsx'
-    # - item_overview = r'C:\Users\frifi\OneDrive\Desktop\School Mat UHasselt\Third Semester\Project Data Science\Data sets\Bundle TE\Item overview TE (1).xlsx'
+    Returns:
+    - DataFrame: Combined and cleaned dataset.
 
-    # - combined_data = clean_and_combine(directory, bundle, item_overview)
-    # """
+    Example:
+    - directory = r'C:\Users\frifi\OneDrive\Desktop\School Mat UHasselt\Third Semester\Project Data Science\Data sets\01 Sales Forecasts'
+    - bundle = r'C:\Users\frifi\OneDrive\Desktop\School Mat UHasselt\Third Semester\Project Data Science\Data sets\Bundle TE\Bundle item TE.xlsx'
+    - item_overview = r'C:\Users\frifi\OneDrive\Desktop\School Mat UHasselt\Third Semester\Project Data Science\Data sets\Bundle TE\Item overview TE (1).xlsx'
+
+    - combined_data = clean_and_combine(directory, bundle, item_overview)
+    """
     # Merge all the excel files
     dataframes = []
 
@@ -473,3 +474,47 @@ def add_columns_and_merge(workload_df: pd.DataFrame, combined_data: pd.DataFrame
         2)
 
     return outbound_new2
+
+
+def outbound(path1:str, path2:str, path3:str)->pd.DataFrame:
+    
+    """
+    This function cleans and wrangle the datasets into the preferred structure 
+    for modelling.
+
+    Arguments: It takes the three paths where the dataset is located as a string
+    ---------
+
+    Returns: It returns a datafram
+    -------
+
+    Example:
+    -------
+    p1 = r'C:\Users\frifi\OneDrive\Desktop\School Mat UHasselt\Orderline.xlsx'
+    p1 = r'C:\Users\frifi\OneDrive\Desktop\School Mat UHasselt\Bundle.csv'
+    p1 = r'C:\Users\frifi\OneDrive\Desktop\School Mat UHasselt\Item overview.csv'
+
+    print(outbound("p1", "p2", "p3"))
+    """
+
+    combined_data = clean_and_combine(path1, path2, path3)
+
+    first_result1 = full_case_calculation(combined_data)
+
+    not_osr_data, osr_data = divide_and_clean(first_result1)
+
+    new_OSR_data = process_osr_data(osr_data)
+
+    new_Not_OSR_full, new_Not_OSR_single = split_into_full_and_single(not_osr_data)
+
+    not_osr_time_full, not_osr_time_single = aggregate_counts_and_time(new_Not_OSR_full, new_Not_OSR_single)
+
+    combined_time_result = merge_times(new_OSR_data, not_osr_time_full, not_osr_time_single)
+
+    pallets_df, colli_df = extract_pallets_and_colli(combined_time_result)
+
+    workload_df = calculate_workload(pallets_df, colli_df, combined_time_result)
+
+    new_dataframe = add_columns_and_merge(workload_df, combined_data)
+
+    return new_dataframe
